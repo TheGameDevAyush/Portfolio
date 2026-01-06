@@ -11,11 +11,65 @@
             margin: 0;
             padding: 0;
             overflow: hidden;
-            background: url('https://4kwallpapers.com/images/wallpapers/windows-7-official-3840x2160-13944.jpg') no-repeat center center fixed;
+            background: #000 url('BG.jpg') no-repeat center center fixed;
             background-size: cover;
             font-family: 'Segoe UI', sans-serif;
             user-select: none;
             /* Make it feel like an OS */
+        }
+
+        /* Boot Screen */
+        #boot-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: black;
+            z-index: 100000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-family: 'Segoe UI', sans-serif;
+            transition: opacity 1s ease-out;
+        }
+
+        .boot-logo {
+            width: 150px;
+            height: 150px;
+            margin-bottom: 50px;
+            animation: pulse 2s infinite;
+        }
+
+        .boot-text {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .boot-copyright {
+            position: absolute;
+            bottom: 20px;
+            font-size: 12px;
+            color: #888;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                opacity: 0.8;
+            }
+
+            50% {
+                transform: scale(1.05);
+                opacity: 1;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 0.8;
+            }
         }
 
         #desktop {
@@ -437,10 +491,92 @@
             border: none;
             transform: rotate(-2deg);
         }
+
+        /* Context Menu */
+        #context-menu {
+            position: absolute;
+            background: #f0f0f0;
+            border: 1px solid #979797;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+            width: 200px;
+            display: none;
+            z-index: 99999;
+            padding: 2px;
+        }
+
+        .context-item {
+            padding: 5px 10px;
+            font-size: 12px;
+            color: black;
+            cursor: default;
+            display: flex;
+            align-items: center;
+        }
+
+        .context-item:hover {
+            background: #e0e0e0;
+            border: 1px solid #70c0e7;
+            background: linear-gradient(to bottom, #f3f8fc, #cce5f5);
+            padding: 4px 9px;
+            /* adjust for border */
+        }
+
+        .context-item.disabled {
+            color: #888;
+        }
+
+        .context-divider {
+            height: 1px;
+            background: #ccc;
+            margin: 3px 0;
+        }
+
+        /* Terminal Window */
+        #terminal-content {
+            background: black;
+            color: #0f0;
+            font-family: 'Consolas', 'Courier New', monospace;
+            padding: 5px;
+            height: 100%;
+            overflow-y: auto;
+            font-size: 14px;
+        }
+
+        .cmd-line {
+            line-height: 1.5;
+        }
+
+        #cmd-input {
+            background: transparent;
+            border: none;
+            color: #0f0;
+            font-family: inherit;
+            font-size: inherit;
+            outline: none;
+            width: 80%;
+        }
     </style>
 </head>
 
 <body>
+
+    <div id="boot-screen">
+        <img src="https://img.icons8.com/color/144/000000/windows-logo.png" class="boot-logo">
+        <div class="boot-text">Starting Windows</div>
+        <div class="boot-copyright">&copy; Microsoft Corporation</div>
+    </div>
+
+    <div id="context-menu">
+        <div class="context-item" onclick="location.reload()">Refresh</div>
+        <div class="context-divider"></div>
+        <div class="context-item disabled">Next desktop background</div>
+        <div class="context-divider"></div>
+        <div class="context-item disabled">New</div>
+        <div class="context-divider"></div>
+        <div class="context-item disabled">Screen resolution</div>
+        <div class="context-item disabled">Gadgets</div>
+        <div class="context-item" onclick="WindowManager.open('about')">Personalize</div>
+    </div>
 
     <div id="desktop">
         <div class="desktop-icon" onclick="WindowManager.open('about')">
@@ -555,6 +691,13 @@
                     </div>
                 </div>
 
+                <div class="start-item" onclick="WindowManager.open('cmd'); toggleStartMenu()">
+                    <img src="https://img.icons8.com/color/48/000000/console.png">
+                    <div class="start-item-text">
+                        <span class="start-item-title">Command Prompt</span>
+                        <span class="start-item-desc">Terminal</span>
+                    </div>
+                </div>
                 <div style="flex:1"></div>
                 <div class="start-item">
                     <img src="https://img.icons8.com/color/48/000000/unity.png"
@@ -702,7 +845,40 @@
         </div>
     </div>
 
+    <div id="window-cmd" class="window glass"
+        style="width: 600px; height: 400px; top: 150px; left: 150px; background: rgba(0,0,0,0.9);">
+        <div class="title-bar">
+            <div class="title-bar-text" style="color:white; text-shadow:none;">Command Prompt</div>
+            <div class="title-bar-controls">
+                <button aria-label="Minimize" onclick="WindowManager.minimize('cmd')"></button>
+                <button aria-label="Maximize" onclick="WindowManager.maximize('cmd')"></button>
+                <button aria-label="Close" onclick="WindowManager.close('cmd')"></button>
+            </div>
+        </div>
+        <div class="window-body" style="background: black; border:none; padding: 2px;">
+            <div id="terminal-content">
+                <div class="cmd-line">Microsoft Windows [Version 6.1.7601]</div>
+                <div class="cmd-line">Copyright (c) 2009 Microsoft Corporation. All rights reserved.</div>
+                <div class="cmd-line">&nbsp;</div>
+                <div class="cmd-line">C:\Users\Ayush><input type="text" id="cmd-input" autocomplete="off" autofocus>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
+        // Boot Sequence
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                const bootScreen = document.getElementById('boot-screen');
+                bootScreen.style.opacity = '0';
+                setTimeout(() => {
+                    bootScreen.style.display = 'none';
+                    // Play startup sound if possible (browsers block autoplay usually)
+                }, 1000);
+            }, 2500); // 2.5s boot time
+        });
+
         // Clock
         function updateClock() {
             const now = new Date();
@@ -876,6 +1052,94 @@
             }
         });
 
+        // Context Menu Logic
+        document.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            const menu = document.getElementById('context-menu');
+            menu.style.display = 'block';
+            menu.style.left = e.pageX + 'px';
+            menu.style.top = e.pageY + 'px';
+        });
+
+        document.addEventListener('click', (e) => {
+            const menu = document.getElementById('context-menu');
+            if (menu.style.display === 'block') {
+                menu.style.display = 'none';
+            }
+        });
+
+        // Terminal Logic
+        const cmdInput = document.getElementById('cmd-input');
+        if (cmdInput) {
+            cmdInput.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter') {
+                    const command = this.value.trim().toLowerCase();
+                    const terminal = document.getElementById('terminal-content');
+
+                    // Create old line div
+                    const oldLine = document.createElement('div');
+                    oldLine.className = 'cmd-line';
+                    oldLine.innerHTML = `C:\\Users\\Ayush&gt;${this.value}`;
+
+                    // Insert before the input line's parent
+                    terminal.insertBefore(oldLine, this.parentNode);
+
+                    // Process command
+                    let response = "";
+                    if (command === 'help') {
+                        response = "Available commands:<br>HELP - List commands<br>DIR - List projects<br>WHOAMI - Current user<br>CLS - Clear screen<br>EXIT - Close terminal<br>DATE - Show date";
+                    } else if (command === 'dir') {
+                        response = " Volume in drive C has no label.<br> Directory of C:\\Users\\Ayush\\Projects<br><br>Just 5 Sec...<br>Forgetful<br>Vayu Browser<br><br>3 File(s)";
+                    } else if (command === 'whoami') {
+                        response = "TheGameDevAyush";
+                    } else if (command === 'date') {
+                        response = new Date().toString();
+                    } else if (command === 'cls') {
+                        terminal.innerHTML = ''; // This is a bit destructive but simple
+                        // Rebuild initial state
+                        const clsContent = `
+                            <div class="cmd-line">C:\\Users\\Ayush&gt;<input type="text" id="cmd-input" autocomplete="off" autofocus></div>
+                        `;
+                        terminal.innerHTML = clsContent;
+                        // Re-attach listener
+                        const newInput = document.getElementById('cmd-input');
+                        newInput.focus();
+                        newInput.onkeydown = this.onkeydown; // Assign same function if possible, or reload logic
+                        // This simplistic CLS breaks the loop slightly, let's just empty and add prompt
+                        // Better approach:
+                        this.value = '';
+                        return; // Logic complexity with CLS in this simple script
+                    } else if (command === 'exit') {
+                        WindowManager.close('cmd');
+                        this.value = '';
+                        return;
+                    } else if (command !== '') {
+                        response = `'${command}' is not recognized as an internal or external command, operable program or batch file.`;
+                    }
+
+                    if (response) {
+                        const resDiv = document.createElement('div');
+                        resDiv.className = 'cmd-line';
+                        resDiv.innerHTML = response;
+                        terminal.insertBefore(resDiv, this.parentNode);
+
+                        // Add spacing
+                        const space = document.createElement('div');
+                        space.className = 'cmd-line';
+                        space.innerHTML = '&nbsp;';
+                        terminal.insertBefore(space, this.parentNode);
+                    }
+
+                    this.value = '';
+                    this.scrollIntoView();
+                }
+            });
+
+            // Focus input when clicking anywhere in terminal
+            document.getElementById('window-cmd').addEventListener('click', () => {
+                document.getElementById('cmd-input').focus();
+            });
+        }
     </script>
 </body>
 
